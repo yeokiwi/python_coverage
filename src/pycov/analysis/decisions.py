@@ -28,6 +28,7 @@ def summarize(
                 "false_seen": false_seen,
             }
         )
+    details.sort(key=lambda d: (d["lineno"], d["decision_id"]))
     return {
         "total": total,
         "covered": covered,

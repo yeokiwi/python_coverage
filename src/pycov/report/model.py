@@ -55,6 +55,8 @@ def build(snapshot: dict[str, Any]) -> dict[str, Any]:
             mcdc_u_covered += sum(1 for x in u if x["covered"])
             mcdc_m_total += len(m)
             mcdc_m_covered += sum(1 for x in m if x["covered"])
+        mcdc_u.sort(key=lambda x: (x["lineno"], x["decision_id"]))
+        mcdc_m.sort(key=lambda x: (x["lineno"], x["decision_id"]))
         files[meta["path"]] = {
             "file_id": file_id,
             "path": meta["path"],
