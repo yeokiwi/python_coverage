@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pycov"
+version = "0.1.0"
+description = "Statement, decision and MC/DC coverage for Python"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "pycov contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+pytest = ["pytest>=7.0"]
+dev = ["pytest>=7.0", "nox"]
+
+[project.scripts]
+pycov = "pycov.cli:main"
+
+[project.entry-points."pytest11"]
+pycov = "pycov.pytest_plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pycov"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/pycov/assets/pycov.css" = "pycov/assets/pycov.css"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
