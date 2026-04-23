@@ -171,7 +171,14 @@ class Instrumenter(ast.NodeTransformer):
             return "<expr>"
 
     def _wrap_decision(self, node: ast.expr) -> ast.expr:
-        """Return a new expression that records a decision observation."""
+        """Return a new expression that records a decision observation.
+
+        Trivially-constant predicates (``if True:``, ``while False:``) are
+        returned unchanged — instrumenting them adds an uncoverable branch
+        that would skew coverage numbers for no diagnostic value.
+        """
+        if isinstance(node, ast.Constant) and isinstance(node.value, (bool, int, float, str, type(None))):
+            return node
         did = self._new_decision_id(node)
         builder = _ExprTreeBuilder(self.file_id, did, self._src)
         wrapped_inner, tree = builder.build(node)

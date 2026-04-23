@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 
 from . import collector as _collector, importer, persistence
-from .config import Config
+from .config import Config, load_from_pyproject, merge_cli
 from .report import html as html_report, json_report, model as report_model, text as text_report
 
 
@@ -25,9 +25,13 @@ def pytest_configure(config) -> None:
     data_dir = os.path.abspath(config.getoption("--pycov-data-dir"))
     persistence.set_data_dir(data_dir)
     persistence.clean(data_dir)
-    cfg = Config(
-        include=config.getoption("--pycov-include"),
-        exclude=config.getoption("--pycov-exclude"),
+    pyproject = load_from_pyproject()
+    cli_include = config.getoption("--pycov-include")
+    cli_exclude = config.getoption("--pycov-exclude")
+    cfg = merge_cli(
+        pyproject,
+        include=cli_include or None,
+        exclude=cli_exclude or None,
         data_dir=data_dir,
     )
     config._pycov_cfg = cfg

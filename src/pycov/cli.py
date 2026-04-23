@@ -6,7 +6,7 @@ import os
 import sys
 
 from . import __version__
-from .config import Config
+from .config import Config, load_from_pyproject, merge_cli
 from .persistence import clean as clean_data, load_all, set_data_dir
 from .report import html as html_report, json_report, model as report_model, text as text_report
 from .runner import run_module, run_script
@@ -53,7 +53,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _config_from(args) -> Config:
-    return Config(include=args.include, exclude=args.exclude, data_dir=args.data_dir)
+    pyproject = load_from_pyproject()
+    return merge_cli(
+        pyproject,
+        include=args.include or None,
+        exclude=args.exclude or None,
+        data_dir=args.data_dir if args.data_dir != ".pycov_data" else None,
+    )
 
 
 def _render(report, snap, formats: list[str], output: str, include_raw: bool) -> None:
