@@ -26,14 +26,15 @@ measurement works uniformly across CPython 3.10 – 3.13 without relying on
 ## Dependencies
 
 ### Runtime
-- **Python**: 3.10, 3.11, 3.12, or 3.13 (managed via Anaconda / Miniconda)
+- **Python**: 3.10, 3.11, 3.12, or 3.13 — whether sourced from Anaconda /
+  Miniconda or from a plain CPython install via `python -m venv`.
 - **Third-party packages**: none — `pycov` uses only the standard library
   (`ast`, `importlib.machinery`, `tokenize`, `threading`, `runpy`,
   `tomllib`/`tomli`, etc.)
 
 ### Optional
 - **pytest** ≥ 7.0 — required only if you use the `--pycov` pytest plugin.
-  Included in the provided conda `environment.yml`.
+  Included in both the conda `environment.yml` and the `[project.optional-dependencies].pytest` extra.
 
 ### Development
 - **pytest** — self-test suite
@@ -43,57 +44,85 @@ measurement works uniformly across CPython 3.10 – 3.13 without relying on
 
 ## Installation
 
-`pycov` is developed and shipped against **Anaconda / Miniconda**. The
-project provides an `environment.yml` that creates an isolated conda
-environment with a compatible Python, `pytest`, and the package itself
-installed in editable mode.
+`pycov` supports two equivalent setups — pick whichever fits your
+workflow. Both install the package in editable mode so local changes are
+picked up without reinstalling.
 
-### 1. Install Anaconda or Miniconda
+### Option A — Anaconda / Miniconda (conda environment)
 
-If you don't already have it, install **Miniconda** (the minimal
-distribution) or the full **Anaconda** distribution from
-<https://www.anaconda.com/download> or
-<https://docs.conda.io/projects/miniconda/>.
+If you prefer conda-managed interpreters, the repository ships an
+`environment.yml` that creates a self-contained conda environment with
+Python, `pytest`, and the package installed via `pip`.
 
-### 2. Create the `pycov` conda environment
+1. Install **Miniconda** or the full **Anaconda** distribution from
+   <https://www.anaconda.com/download> or
+   <https://docs.conda.io/projects/miniconda/>.
+2. Create the `pycov` environment:
 
-```bash
-git clone <repo-url> pycov && cd pycov
-conda env create -f environment.yml
-```
+   ```bash
+   git clone <repo-url> pycov && cd pycov
+   conda env create -f environment.yml
+   ```
 
-This creates an environment named `pycov` using Python 3.12 by default
-(edit `environment.yml` to pick any of 3.10 – 3.13).
+   This creates an environment named `pycov` using Python 3.12 by
+   default (edit `environment.yml` to pick any of 3.10 – 3.13).
+3. Activate it:
 
-### 3. Activate the environment
+   ```bash
+   conda activate pycov
+   ```
 
-```bash
-conda activate pycov
-```
-
-Once activated, the `pycov` command is available on your `PATH` and the
-package is importable as `import pycov`.
-
-### Updating an existing environment
-
-If `environment.yml` changes (new dependency, new Python version):
+**Update / remove:**
 
 ```bash
-conda env update -f environment.yml --prune
-```
-
-### Removing the environment
-
-```bash
+conda env update -f environment.yml --prune   # after environment.yml changes
 conda deactivate
 conda env remove -n pycov
 ```
+
+### Option B — pip + `venv` (plain CPython)
+
+If you already have a compatible CPython (3.10 – 3.13) on `PATH` and do
+not want to involve conda, use the standard-library `venv` plus `pip`.
+
+1. Create and activate a virtual environment:
+
+   ```bash
+   git clone <repo-url> pycov && cd pycov
+   python -m venv .venv
+
+   # Linux / macOS
+   source .venv/bin/activate
+   # Windows (PowerShell)
+   .venv\Scripts\Activate.ps1
+   ```
+2. Install the package in editable mode:
+
+   ```bash
+   pip install --upgrade pip
+   pip install -e .                 # runtime only
+   pip install -e ".[pytest]"       # also pulls in pytest (for the plugin + self-tests)
+   ```
+
+**Update / remove:**
+
+```bash
+pip install -e ".[pytest]" --upgrade     # refresh deps after a pull
+deactivate
+rm -rf .venv                             # Windows: rmdir /s /q .venv
+```
+
+Either option puts the `pycov` command on your `PATH` and makes
+`import pycov` available inside the activated environment.
 
 ---
 
 ## Usage
 
-All commands below assume you have run `conda activate pycov` first.
+All commands below assume you have activated the environment you
+installed into — `conda activate pycov` for Option A, or
+`source .venv/bin/activate` (Linux / macOS) /
+`.venv\Scripts\Activate.ps1` (Windows) for Option B.
 
 ### 1. Run a script under pycov
 
@@ -205,7 +234,7 @@ data-dir = ".pycov_data"
 
 ## Running the test suite
 
-Inside an activated `pycov` conda environment:
+Inside the activated environment (conda or `venv`):
 
 ```bash
 pytest                          # run everything on the environment's Python
