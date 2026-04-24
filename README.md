@@ -127,9 +127,8 @@ installed into — `conda activate pycov` for Option A, or
 ### 1. Run a script under pycov
 
 ```bash
-pycov run examples/fizzbuzz.py 15 \
-    --report text,json,html \
-    --output build/report
+pycov run --report text,json,html --output build/report \
+    examples/fizzbuzz.py 15
 ```
 
 `pycov run` instruments the entry script *and* every imported module that
@@ -138,10 +137,17 @@ are forwarded to `sys.argv`), flushes coverage data on exit, and then
 renders the requested reports. Open `build/report/index.html` to browse
 the HTML output.
 
+> **Flag ordering** — all `pycov` options (`--report`, `--output`,
+> `--include`, …) must appear **before** the target script path.
+> Anything after the target is forwarded to the target's own `sys.argv`.
+> If your target's own arguments begin with `-`, use `--` to separate
+> them: `pycov run --report html -- my_script.py --some-flag=value`.
+
 Equivalent module form:
 
 ```bash
-pycov run -m mypkg.cli -- --some-arg
+pycov run --report text,json,html --output build/report \
+    -m mypkg.cli -- --some-arg
 ```
 
 ### 2. Use with pytest

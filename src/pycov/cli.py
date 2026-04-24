@@ -84,6 +84,36 @@ def _fail_under(report, threshold) -> int:
     return 0
 
 
+_PYCOV_RUN_FLAGS = {
+    "--include", "--exclude", "--data-dir",
+    "--report", "--output", "--fail-under", "--json-include-raw",
+    "--no-report", "-m", "--module",
+}
+
+
+def _warn_misplaced_flags(script_args: list[str]) -> None:
+    """Emit a friendly warning if pycov-looking flags appear in the captured
+    script-args list, which happens when the user puts pycov flags *after*
+    the target (``pycov run script.py --report html`` instead of
+    ``pycov run --report html script.py``).
+    """
+    misplaced: list[str] = []
+    for tok in script_args:
+        name = tok.split("=", 1)[0]
+        if name in _PYCOV_RUN_FLAGS:
+            misplaced.append(name)
+    if misplaced:
+        joined = ", ".join(sorted(set(misplaced)))
+        sys.stderr.write(
+            f"pycov: warning: {joined} appeared after the target script and was "
+            f"forwarded to it as an argument.\n"
+            f"       Place pycov flags before the target, or use `--` to "
+            f"separate them, e.g.:\n"
+            f"         pycov run --report text,json,html --output build/report examples/fizzbuzz.py 15\n"
+            f"         pycov run --report text,json,html --output build/report -- examples/fizzbuzz.py 15\n"
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -98,14 +128,20 @@ def main(argv: list[str] | None = None) -> int:
     formats = [f.strip() for f in args.report.split(",") if f.strip()]
 
     if args.cmd == "run":
+        script_args = list(args.args or [])
+        # argparse.REMAINDER also captures `--` literally; drop it before
+        # forwarding to the target so the target sees a clean argv.
+        if script_args and script_args[0] == "--":
+            script_args = script_args[1:]
+        _warn_misplaced_flags(script_args)
         # clean previous data for this run so `pycov run` is idempotent
         clean_data(args.data_dir)
         if args.module:
-            rc = run_module(args.module, args.args or [], config)
+            rc = run_module(args.module, script_args, config)
         else:
             if not args.target:
                 parser.error("run requires TARGET or --module MOD")
-            rc = run_script(args.target, args.args or [], config)
+            rc = run_script(args.target, script_args, config)
         # flush happens via atexit; but we need data on disk before reporting
         from .collector import flush as _flush
 
