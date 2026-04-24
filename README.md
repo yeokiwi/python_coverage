@@ -26,15 +26,14 @@ measurement works uniformly across CPython 3.10 – 3.13 without relying on
 ## Dependencies
 
 ### Runtime
-- **Python**: 3.10, 3.11, 3.12, or 3.13
+- **Python**: 3.10, 3.11, 3.12, or 3.13 (managed via Anaconda / Miniconda)
 - **Third-party packages**: none — `pycov` uses only the standard library
   (`ast`, `importlib.machinery`, `tokenize`, `threading`, `runpy`,
   `tomllib`/`tomli`, etc.)
 
 ### Optional
 - **pytest** ≥ 7.0 — required only if you use the `--pycov` pytest plugin.
-  Installed automatically with `pip install pycov[pytest]` or
-  `uv sync --group dev`.
+  Included in the provided conda `environment.yml`.
 
 ### Development
 - **pytest** — self-test suite
@@ -44,33 +43,62 @@ measurement works uniformly across CPython 3.10 – 3.13 without relying on
 
 ## Installation
 
-### Using `uv` (recommended)
+`pycov` is developed and shipped against **Anaconda / Miniconda**. The
+project provides an `environment.yml` that creates an isolated conda
+environment with a compatible Python, `pytest`, and the package itself
+installed in editable mode.
+
+### 1. Install Anaconda or Miniconda
+
+If you don't already have it, install **Miniconda** (the minimal
+distribution) or the full **Anaconda** distribution from
+<https://www.anaconda.com/download> or
+<https://docs.conda.io/projects/miniconda/>.
+
+### 2. Create the `pycov` conda environment
 
 ```bash
 git clone <repo-url> pycov && cd pycov
-uv sync                 # create .venv and install in editable mode
-uv sync --group dev     # also install pytest for running the test suite
+conda env create -f environment.yml
 ```
 
-### Using `pip`
+This creates an environment named `pycov` using Python 3.12 by default
+(edit `environment.yml` to pick any of 3.10 – 3.13).
+
+### 3. Activate the environment
 
 ```bash
-git clone <repo-url> pycov && cd pycov
-python -m venv .venv && source .venv/bin/activate
-pip install -e .                # runtime only
-pip install -e ".[pytest]"      # with pytest integration
+conda activate pycov
 ```
 
-After either, the `pycov` command is on your `PATH` inside the virtualenv.
+Once activated, the `pycov` command is available on your `PATH` and the
+package is importable as `import pycov`.
+
+### Updating an existing environment
+
+If `environment.yml` changes (new dependency, new Python version):
+
+```bash
+conda env update -f environment.yml --prune
+```
+
+### Removing the environment
+
+```bash
+conda deactivate
+conda env remove -n pycov
+```
 
 ---
 
 ## Usage
 
+All commands below assume you have run `conda activate pycov` first.
+
 ### 1. Run a script under pycov
 
 ```bash
-uv run pycov run examples/fizzbuzz.py 15 \
+pycov run examples/fizzbuzz.py 15 \
     --report text,json,html \
     --output build/report
 ```
@@ -84,7 +112,7 @@ the HTML output.
 Equivalent module form:
 
 ```bash
-uv run pycov run -m mypkg.cli -- --some-arg
+pycov run -m mypkg.cli -- --some-arg
 ```
 
 ### 2. Use with pytest
@@ -92,7 +120,7 @@ uv run pycov run -m mypkg.cli -- --some-arg
 Register the plugin via `--pycov`:
 
 ```bash
-uv run pytest --pycov \
+pytest --pycov \
     --pycov-include='src/*' \
     --pycov-report=text,html \
     --pycov-output=build/report
@@ -105,7 +133,7 @@ session when statement coverage drops below a threshold.
 ### 3. Render a report from existing data
 
 ```bash
-uv run pycov report --data-dir .pycov_data \
+pycov report --data-dir .pycov_data \
     --output build/report \
     --report all
 ```
@@ -116,7 +144,7 @@ their coverage into a single report.
 ### 4. Clean saved data
 
 ```bash
-uv run pycov clean --data-dir .pycov_data
+pycov clean --data-dir .pycov_data
 ```
 
 ---
@@ -177,9 +205,11 @@ data-dir = ".pycov_data"
 
 ## Running the test suite
 
+Inside an activated `pycov` conda environment:
+
 ```bash
-uv run pytest                   # run everything on the current Python
-uv run nox -s tests             # full 3.10 – 3.13 matrix (requires nox)
+pytest                          # run everything on the environment's Python
+nox -s tests                    # full 3.10 – 3.13 matrix (requires `pip install nox`)
 ```
 
 The suite covers the AST transformer across every supported node kind,

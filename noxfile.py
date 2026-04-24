@@ -1,4 +1,12 @@
-"""Multi-Python test matrix. Run: ``uv run nox`` or ``nox -s tests-3.12``."""
+"""Multi-Python test matrix. Run: ``nox`` or ``nox -s tests-3.12``.
+
+Intended to be invoked from an activated conda ``pycov`` environment where
+``nox`` has been installed via ``pip install nox``. Nox manages its own
+per-session virtualenvs, so conda provides only the outer interpreter +
+``nox`` driver; the matrix below still needs the target Python versions
+resolvable on ``PATH`` (e.g. via ``conda install python=3.10 python=3.11 ...``
+into separate conda envs, or a ``pyenv`` install).
+"""
 from __future__ import annotations
 
 import nox
